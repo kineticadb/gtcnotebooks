@@ -7,8 +7,6 @@ from gpudb import GPUdb
 # from rich.logging import RichHandler
 # from rich.console import Console
 # from rich.theme import Theme
-
-
 class NemoChatLLM(LoggingMixin):
     _api_host = "https://api.llm.ngc.nvidia.com/v1"
     _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
@@ -42,7 +40,7 @@ class NemoChatLLM(LoggingMixin):
 
         last_prompt = out_ctx[-1]
         role = last_prompt['role']
-        if (role != 'assistant'):
+        if role != 'assistant':
             raise ValueError("Got unexpected role: {role}")
 
         return out_ctx
@@ -65,7 +63,8 @@ class SqlAssistLLM(LoggingMixin):
     PASSWORD = "Kinetica123!"
     SQL_CONTEXT = "raceday.raceday_ui_ctxt"
 
-    def __init__(self):
+    def __init__(self, sql_context: str = 'raceday.raceday_ui_ctxt'):
+        self.SQL_CONTEXT = sql_context
         self._dbc = self._create_kdbc()
 
     def query(self, question: str) -> str:
@@ -118,19 +117,18 @@ class SqlAssistLLM(LoggingMixin):
 class KineticaLLM(LoggingMixin):
     SA_PREFIX = 'KineticaLLM | '
 
-    def __init__(self):
+    def __init__(self, sql_context: str = 'raceday.raceday_ui_ctxt'):
         self._nemo = NemoChatLLM()
-        self._sqlAssist = SqlAssistLLM()
+        self._sqlAssist = SqlAssistLLM(sql_context)
 
     def chat(self, in_ctx: list, question: str) -> list:
         nemo_ctx = self._nemo.chat(in_ctx, question)
         last_prompt = nemo_ctx[-1]
         content = last_prompt['content'].strip()
 
-        if (content.startswith(self.SA_PREFIX)):
+        if content.startswith(self.SA_PREFIX):
             sa_question = content.removeprefix(self.SA_PREFIX).strip()
             sa_response = self._sqlAssist.query(sa_question)
             nemo_ctx = self._nemo.chat(in_ctx, f'{self.SA_PREFIX} {sa_response}')
 
         return nemo_ctx
-
