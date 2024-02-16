@@ -2,7 +2,7 @@
 # Copyright (c) 2024, Chad Juliano, Kinetica DB Inc.
 ##
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, Optional
 from logging import Logger, Handler
 import logging
 import colorlog
@@ -69,7 +69,7 @@ class LoggingMixin:
     Copied from: https://github.com/apache/airflow/blob/main/airflow/utils/log/logging_mixin.py
     """
 
-    _log: logging.Logger | None = None
+    _log: Optional[logging.Logger] = None
 
     def __init__(self, context=None):
         self._set_context(context)
