@@ -9,6 +9,7 @@ class NemoSummaryLLM(LoggingMixin):
     _org_id = 'oijaxh3dnjmy'
     _model_id = "gpt-43b-002"
     _max_tokens = 4096
+    _end_token = "<|end|>"
 
     def __init__(self):
         self._conn = NemoLLM(
@@ -25,7 +26,7 @@ class NemoSummaryLLM(LoggingMixin):
 
         response = self._conn.generate(
             model=self._model_id,
-            stop=['<|end|>'],
+            stop=[self._end_token],
             prompt=prompt,
             tokens_to_generate=200,
             temperature=1.,
@@ -49,7 +50,7 @@ class NemoSummaryLLM(LoggingMixin):
         for message in context:
             role = message['role']
             content = message['content']
-            prompt_list.append(f"<|{role}|>{content}<|end|>")
+            prompt_list.append(f"<|{role}|>{content}{self._end_token}")
 
         prompt_list.append('<|assistant|>')
         prompt = "\n".join(prompt_list)
@@ -68,14 +69,10 @@ class NemoSummaryLLM(LoggingMixin):
         self.log.info(f"{role}: {content.strip()} (tokens: {output_tokens}/{remaining_tokens})")
 
 
-# from rich.logging import RichHandler
-# from rich.console import Console
-# from rich.theme import Theme
 class NemoChatLLM(LoggingMixin):
     _api_host = "https://api.llm.ngc.nvidia.com/v1"
     _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
     _model_id = "gpt-43b-905"
-    # mixtral 7b
     # _model_id="llama-2-70b-chat-hf"
     _max_tokens = 4096
 
