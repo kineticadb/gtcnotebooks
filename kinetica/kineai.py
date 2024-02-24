@@ -81,7 +81,7 @@ class SqlAssistLLM(LoggingMixin):
         return sql_response
 
     def _execute_sql(self, sql: str) -> list:
-        response = self._dbc.execute_sql_and_decode(sql, limit=4, get_column_major=False)
+        response = self._dbc.execute_sql_and_decode(sql, limit=100, get_column_major=False)
 
         status_info = response['status_info']
         if (status_info['status'] != 'OK'):
@@ -122,13 +122,7 @@ class KineticaLLM(LoggingMixin):
         self._sqlAssist = SqlAssistLLM(sql_context)
 
     def chat(self, in_ctx: list, question: str) -> list:
-        nemo_ctx = self._nemo.chat(in_ctx, question)
-        last_prompt = nemo_ctx[-1]
-        content = last_prompt['content'].strip()
-
-        if content.startswith(self.SA_PREFIX):
-            sa_question = content.removeprefix(self.SA_PREFIX).strip()
-            sa_response = self._sqlAssist.query(sa_question)
-            nemo_ctx = self._nemo.chat(in_ctx, f'{self.SA_PREFIX} {sa_response}')
+        sa_response = self._sqlAssist.query(question)
+        nemo_ctx = self._nemo.chat(in_ctx, f'{self.SA_PREFIX} {sa_response}')
 
         return nemo_ctx
