@@ -3,15 +3,76 @@ from kinetica.jl_logging import LoggingMixin
 import json
 from gpudb import GPUdb
 
+class NemoSummaryLLM(LoggingMixin):
+    _api_host = "https://api.llm.ngc.nvidia.com/v1"
+    _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
+    _org_id = 'oijaxh3dnjmy'
+    _model_id = "gpt-43b-002"
+    _max_tokens = 4096
+    _end_token = "<|end|>"
 
-# from rich.logging import RichHandler
-# from rich.console import Console
-# from rich.theme import Theme
+    def __init__(self):
+        self._conn = NemoLLM(
+            api_host=self._api_host,
+            api_key=self._api_key,
+            org_id=self._org_id)
+        
+    def summarize(self, context: list, question: str) -> str:
+        prompt_messages = context.copy()
+        prompt_messages.append(dict(role="user", content=question))
+        prompt = self._get_prompt(prompt_messages)
+        #self.log.info(f"Prompt: {prompt}")
+        self._print_last(prompt_messages, prompt)
+
+        response = self._conn.generate(
+            model=self._model_id,
+            stop=[self._end_token],
+            prompt=prompt,
+            tokens_to_generate=200,
+            temperature=1.,
+            top_k=1,
+            top_p=0.,
+            random_seed=0,
+            beam_search_diversity_rate=0.,
+            beam_width=1,
+            repetition_penalty=1.,
+            length_penalty=1.,
+            logprobs=False,
+        )
+        
+        content = response['text'].strip()
+        self.log.info(f"assistant: {content}")
+        return content
+    
+
+    def _get_prompt(self, context) -> str:
+        prompt_list = []
+        for message in context:
+            role = message['role']
+            content = message['content']
+            prompt_list.append(f"<|{role}|>{content}{self._end_token}")
+
+        prompt_list.append('<|assistant|>')
+        prompt = "\n".join(prompt_list)
+
+        return prompt
+
+    def _print_last(self, ctx: list, prompt: str) -> None:
+        last_prompt = ctx[-1]
+        role = last_prompt['role']
+        content = last_prompt['content']
+
+        response = self._conn.count_tokens(model=self._model_id, prompt=prompt)
+        output_tokens = response['input_length']
+        remaining_tokens = self._max_tokens - output_tokens
+
+        self.log.info(f"{role}: {content.strip()} (tokens: {output_tokens}/{remaining_tokens})")
+
+
 class NemoChatLLM(LoggingMixin):
     _api_host = "https://api.llm.ngc.nvidia.com/v1"
     _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
     _model_id = "gpt-43b-905"
-    # mixtral 7b
     # _model_id="llama-2-70b-chat-hf"
     _max_tokens = 4096
 
