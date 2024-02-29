@@ -120,7 +120,7 @@ class NemoChatLLM(LoggingMixin):
 
 
 class SqlAssistLLM(LoggingMixin):
-    URL = "http://172.31.33.30:9191"
+    URL = "https://demo72.kinetica.com/_gpudb"
     LOGIN = "gtc"
     PASSWORD = "Kinetica123!"
     SQL_CONTEXT = "raceday.raceday_ui_ctxt"
