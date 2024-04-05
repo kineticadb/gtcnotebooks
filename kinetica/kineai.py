@@ -3,19 +3,24 @@ from kinetica.jl_logging import LoggingMixin
 import json
 from gpudb import GPUdb
 
+# Enter your Nvidia Nemo LLM key here. Generare your key at:
+# https://org.ngc.nvidia.com/setup
+NEMO_LLM_KEY = "NT__"
+
+NEMO_LLM_HOST = "https://api.llm.ngc.nvidia.com/v1"
+
 class NemoSummaryLLM(LoggingMixin):
-    _api_host = "https://api.llm.ngc.nvidia.com/v1"
-    _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
-    _org_id = 'oijaxh3dnjmy'
+    #_org_id = 'oijaxh3dnjmy'
     _model_id = "gpt-43b-002"
     _max_tokens = 4096
     _end_token = "<|end|>"
 
     def __init__(self):
         self._conn = NemoLLM(
-            api_host=self._api_host,
-            api_key=self._api_key,
-            org_id=self._org_id)
+            api_host=NEMO_LLM_HOST,
+            api_key=NEMO_LLM_KEY,
+            # org_id=org_ID
+        )
         
     def summarize(self, context: list, question: str) -> str:
         prompt_messages = context.copy()
@@ -70,16 +75,14 @@ class NemoSummaryLLM(LoggingMixin):
 
 
 class NemoChatLLM(LoggingMixin):
-    _api_host = "https://api.llm.ngc.nvidia.com/v1"
-    _api_key = "NTdvMmcwdHRxdWNqNW05MTMyZzZidm1vNDoxOTRlY2E3Mi1lNmZhLTQ1MmMtOTY5OC0xZjZiNzY4Zjk3Y2M"
     _model_id = "gpt-43b-905"
     # _model_id="llama-2-70b-chat-hf"
     _max_tokens = 4096
 
     def __init__(self):
         self._conn = NemoLLM(
-            api_host=self._api_host,
-            api_key=self._api_key,
+            api_host=NEMO_LLM_HOST,
+            api_key=NEMO_LLM_KEY,
             # org_id=org_ID
         )
 
